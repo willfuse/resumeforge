@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ResumeForge — AI-Powered Resume Tailoring</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #0d0d0f;
+  --bg2:      #13131a;
+  --bg3:      #1a1a24;
+  --surface:  #1f1f2e;
+  --border:   rgba(255,255,255,0.07);
+  --border2:  rgba(255,255,255,0.14);
+  --text:     #e8e6f0;
+  --text2:    #7a7890;
+  --text3:    #4a4860;
+  --accent:   #7c6af7;
+  --accent2:  #a594ff;
+  --accent-bg: rgba(124,106,247,0.1);
+  --accent-border: rgba(124,106,247,0.3);
+  --green:    #34d399;
+  --green-bg: rgba(52,211,153,0.08);
+  --red:      #f87171;
+  --mono:     'Menlo', 'Consolas', 'Monaco', monospace;
+  --sans:     -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+}
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 0;
+}
+
+/* Grid background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(124,106,247,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124,106,247,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.wrap {
+  position: relative;
+  z-index: 1;
+  max-width: 740px;
+  margin: 0 auto;
+  padding: 3rem 1.25rem 4rem;
+}
+
+/* Header */
+.header {
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+.logo-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+
+.logo-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--accent);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.logo-text {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  color: var(--text);
+}
+
+.logo-text span { color: var(--accent2); }
+
+.tagline {
+  font-size: 13px;
+  color: var(--text2);
+  font-family: var(--mono);
+  letter-spacing: 0.03em;
+}
+
+.tag-blink::after {
+  content: '_';
+  animation: blink 1s step-end infinite;
+  color: var(--accent2);
+}
+
+@keyframes blink { 50% { opacity: 0; } }
+
+/* Section cards */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 12px;
+}
+
+.card-label {
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--accent2);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-label::before {
+  content: '//';
+  color: var(--text3);
+}
+
+.row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.field-label {
+  font-size: 11px;
+  color: var(--text2);
+  font-family: var(--mono);
+  margin-bottom: 5px;
+}
+
+input[type="text"], input[type="password"] {
+  width: 100%;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-family: var(--mono);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg3);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+input:focus { border-color: var(--accent-border); }
+input::placeholder { color: var(--text3); }
+
+.api-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.api-row input { flex: 1; }
+
+.badge {
+  font-size: 10px;
+  font-family: var(--mono);
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: var(--green-bg);
+  color: var(--green);
+  border: 1px solid rgba(52,211,153,0.2);
+  white-space: nowrap;
+}
+
+textarea {
+  width: 100%;
+  resize: vertical;
+  font-size: 12.5px;
+  font-family: var(--mono);
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg3);
+  color: var(--text);
+  line-height: 1.7;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+textarea:focus { border-color: var(--accent-border); }
+textarea::placeholder { color: var(--text3); }
+
+#resume { min-height: 180px; }
+#jd     { min-height: 200px; }
+
+/* Step chips */
+.steps-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.chip {
+  font-size: 11px;
+  font-family: var(--mono);
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  color: var(--text2);
+  background: var(--bg3);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s;
+  letter-spacing: 0.02em;
+}
+
+.chip:hover { border-color: var(--border2); color: var(--text); }
+
+.chip.on {
+  background: var(--accent-bg);
+  color: var(--accent2);
+  border-color: var(--accent-border);
+}
+
+/* Error */
+.err {
+  font-size: 12px;
+  font-family: var(--mono);
+  color: var(--red);
+  margin: 10px 0;
+  display: none;
+  padding: 8px 12px;
+  background: rgba(248,113,113,0.08);
+  border: 1px solid rgba(248,113,113,0.2);
+  border-radius: 6px;
+}
+
+/* Generate button */
+.gen-btn {
+  width: 100%;
+  padding: 14px;
+  font-size: 13px;
+  font-family: var(--mono);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  border: 1px solid var(--accent-border);
+  border-radius: 10px;
+  background: var(--accent-bg);
+  color: var(--accent2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.15s;
+  margin-top: 4px;
+}
+
+.gen-btn:hover {
+  background: rgba(124,106,247,0.18);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.gen-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.gen-btn .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent2);
+}
+
+/* Progress */
+.progress { display: none; margin: 1.25rem 0 0; }
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.progress-label {
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--text2);
+}
+
+.progress-pct {
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--accent2);
+}
+
+.progress-track {
+  height: 2px;
+  background: var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+/* Output */
+.output-section { display: none; margin-top: 1.5rem; }
+
+.score-strip {
+  display: none;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background: var(--green-bg);
+  border: 1px solid rgba(52,211,153,0.2);
+  border-radius: 10px;
+  margin-bottom: 14px;
+}
+
+.score-num {
+  font-size: 22px;
+  font-weight: 600;
+  font-family: var(--mono);
+  color: var(--green);
+}
+
+.score-desc {
+  font-size: 12px;
+  font-family: var(--mono);
+  color: var(--green);
+  opacity: 0.7;
+}
+
+.tab-row {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.tab {
+  font-size: 11px;
+  font-family: var(--mono);
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text2);
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: all 0.15s;
+}
+
+.tab:hover { color: var(--text); border-color: var(--border2); }
+
+.tab.active {
+  background: var(--accent-bg);
+  color: var(--accent2);
+  border-color: var(--accent-border);
+}
+
+.out-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.copy-btn {
+  font-size: 11px;
+  font-family: var(--mono);
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text2);
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: all 0.15s;
+}
+
+.copy-btn:hover { color: var(--text); border-color: var(--border2); }
+
+.output-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem;
+  font-size: 12.5px;
+  line-height: 1.85;
+  white-space: pre-wrap;
+  font-family: var(--mono);
+  min-height: 360px;
+  color: var(--text);
+}
+
+/* How it works */
+.how-section {
+  margin-top: 3rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.how-title {
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--text3);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 1.25rem;
+  text-align: center;
+}
+
+.steps-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.step-item {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.step-num {
+  font-size: 10px;
+  font-family: var(--mono);
+  color: var(--accent2);
+  margin-bottom: 6px;
+  letter-spacing: 0.08em;
+}
+
+.step-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.step-desc {
+  font-size: 11px;
+  color: var(--text2);
+  line-height: 1.6;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  margin-top: 3rem;
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--text3);
+}
+
+.footer a { color: var(--text3); text-decoration: none; }
+.footer a:hover { color: var(--text2); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="logo-row">
+      <div class="logo-icon">⚡</div>
+      <div class="logo-text">Resume<span>Forge</span></div>
+    </div>
+    <p class="tagline">paste your resume + a job description. get a tailored resume, cover letter, and ATS score<span class="tag-blink"></span></p>
+  </div>
+
+  <div class="card">
+    <div class="card-label">config</div>
+    <div class="field-label">claude api key</div>
+    <div class="api-row">
+      <input type="password" id="apikey" placeholder="sk-ant-api03-…" />
+      <span class="badge">local only</span>
+    </div>
+    <div class="row2">
+      <div>
+        <div class="field-label">your name (optional)</div>
+        <input type="text" id="name" placeholder="Full name" />
+      </div>
+      <div>
+        <div class="field-label">target title (optional)</div>
+        <input type="text" id="title" placeholder="e.g. Senior PM" />
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">your resume</div>
+    <textarea id="resume" placeholder="Paste your current resume here — work history, skills, education…"></textarea>
+  </div>
+
+  <div class="card">
+    <div class="card-label">job description</div>
+    <textarea id="jd" placeholder="Paste the full job description here…"></textarea>
+  </div>
+
+  <div class="card">
+    <div class="card-label">optimization steps</div>
+    <div class="steps-grid" id="steps">
+      <span class="chip on" data-s="1">01 · ATS keywords</span>
+      <span class="chip on" data-s="2">02 · Rewrite bullets</span>
+      <span class="chip on" data-s="3">03 · Close gaps</span>
+      <span class="chip on" data-s="4">04 · Pro summary</span>
+      <span class="chip on" data-s="5">05 · Cover letter</span>
+      <span class="chip on" data-s="6">06 · Rank + tips</span>
+    </div>
+  </div>
+
+  <p class="err" id="err">⚠ api key, resume, and job description are required</p>
+
+  <button class="gen-btn" id="gen-btn" onclick="generate()">
+    <span class="dot"></span>
+    run forge — generate tailored resume + cover letter
+  </button>
+
+  <div class="progress" id="progress">
+    <div class="progress-header">
+      <span class="progress-label" id="progress-label">initializing…</span>
+      <span class="progress-pct" id="progress-pct">0%</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+  </div>
+
+  <div class="output-section" id="output-section">
+    <div class="score-strip" id="score-strip">
+      <div class="score-num" id="score-num">—</div>
+      <div class="score-desc" id="score-desc">estimated ranking vs. other applicants</div>
+    </div>
+
+    <div class="tab-row">
+      <button class="tab active" onclick="switchTab('resume', this)">resume</button>
+      <button class="tab" onclick="switchTab('cover', this)">cover letter</button>
+      <button class="tab" onclick="switchTab('notes', this)">notes + ranking</button>
+    </div>
+
+    <div class="out-header">
+      <button class="copy-btn" onclick="copyActive()">copy to clipboard</button>
+    </div>
+
+    <div class="output-box" id="out-resume"></div>
+    <div class="output-box" id="out-cover" style="display:none"></div>
+    <div class="output-box" id="out-notes" style="display:none"></div>
+  </div>
+
+  <div class="how-section">
+    <div class="how-title">// how it works</div>
+    <div class="steps-list">
+      <div class="step-item">
+        <div class="step-num">STEP 01</div>
+        <div class="step-name">ATS Keywords</div>
+        <div class="step-desc">Extracts and injects the exact keywords recruiters and ATS scanners look for.</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">STEP 02</div>
+        <div class="step-name">Bullet Rewrites</div>
+        <div class="step-desc">Every bullet becomes: action verb + task + method + quantified result.</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">STEP 03</div>
+        <div class="step-name">Gap Analysis</div>
+        <div class="step-desc">Reframes your experience to cover skill gaps using transferable language.</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">STEP 04</div>
+        <div class="step-name">Pro Summary</div>
+        <div class="step-desc">3–4 line summary that positions you as the obvious hire for this exact role.</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">STEP 05</div>
+        <div class="step-name">Cover Letter</div>
+        <div class="step-desc">Compelling, specific cover letter — not a generic template.</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">STEP 06</div>
+        <div class="step-name">Ranking + Tips</div>
+        <div class="step-desc">Rates your resume vs. typical applicants and tells you exactly what to improve.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    built with <a href="https://www.anthropic.com" target="_blank">claude</a> by <a href="https://github.com/willfuse" target="_blank">willfuse</a> · your data never leaves your browser · <a href="https://github.com/willfuse/resumeforge" target="_blank">view source</a>
+  </div>
+
+</div>
+
+<script>
+const STEPS = {
+  1: 'Extract ATS keywords, skills, and competencies from the JD — inject them naturally into the resume (especially experience and skills sections). Avoid keyword stuffing.',
+  2: 'Rewrite every bullet point using: Action verb + Task + Method + Result. Quantify results wherever possible. Prioritize responsibilities that align with the JD.',
+  3: 'Identify gaps between the resume and JD. Reframe existing experience to bridge them using transferable skills. Adjust wording to match industry-specific language in the JD.',
+  4: 'Write a 3-4 line professional summary tailored specifically to this JD. Include years of experience, specialization, and 2-3 key skills from the JD. Make it compelling and specific — no generic phrases.',
+  5: 'Write a powerful cover letter (3-4 paragraphs) that directly addresses why this candidate is a strong fit for this specific role and company.',
+  6: 'Act as a hiring manager. Rank the resume vs. typical applicants (Top 10%, Top 25%, etc.) and provide 3-5 final specific improvements to push it into the top tier.'
+};
+
+document.querySelectorAll('.chip').forEach(c => {
+  c.addEventListener('click', () => c.classList.toggle('on'));
+});
+
+let texts = { resume: '', cover: '', notes: '' };
+let activeTab = 'resume';
+
+function switchTab(tab, el) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  ['resume','cover','notes'].forEach(t => {
+    document.getElementById('out-' + t).style.display = t === tab ? 'block' : 'none';
+  });
+}
+
+function copyActive() {
+  const text = texts[activeTab];
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    const orig = btn.textContent;
+    btn.textContent = 'copied ✓';
+    setTimeout(() => btn.textContent = orig, 1500);
+  });
+}
+
+function setProgress(pct, label) {
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = label;
+  document.getElementById('progress-pct').textContent = pct + '%';
+}
+
+async function generate() {
+  document.getElementById('err').style.display = 'none';
+
+  const apiKey  = document.getElementById('apikey').value.trim();
+  const resume  = document.getElementById('resume').value.trim();
+  const jd      = document.getElementById('jd').value.trim();
+  const name    = document.getElementById('name').value.trim();
+  const titleV  = document.getElementById('title').value.trim();
+
+  if (!apiKey || !resume || !jd) {
+    document.getElementById('err').style.display = 'block';
+    return;
+  }
+
+  const activeSteps = [...document.querySelectorAll('.chip.on')].map(c => c.dataset.s);
+  if (!activeSteps.length) {
+    document.getElementById('err').textContent = '⚠ select at least one optimization step';
+    document.getElementById('err').style.display = 'block';
+    return;
+  }
+
+  const stepInstructions = activeSteps.map(s => `Step ${s}: ${STEPS[s]}`).join('\n\n');
+
+  const btn = document.getElementById('gen-btn');
+  btn.disabled = true;
+  document.getElementById('progress').style.display = 'block';
+  document.getElementById('output-section').style.display = 'none';
+  document.getElementById('score-strip').style.display = 'none';
+  setProgress(5, 'analyzing job description…');
+
+  const systemPrompt = `You are a senior recruiter, resume strategist, and hiring manager with 15+ years of experience placing candidates at top companies. You produce ATS-optimized, highly tailored resumes that consistently land interviews. You mirror the language, keywords, and priorities in the job description precisely.`;
+
+  const userPrompt = `Rewrite my resume to be fully tailored to the job description below. Apply each step in order:
+
+${stepInstructions}
+
+My name: ${name || '[use name from resume]'}
+Target title: ${titleV || '[use target role from JD]'}
+
+---
+MY CURRENT RESUME:
+${resume}
+
+---
+JOB DESCRIPTION:
+${jd}
+
+---
+OUTPUT FORMAT — return exactly three sections with these exact headers:
+
+===RESUME===
+[Full optimized resume in clean plain text]
+
+===COVER LETTER===
+[Full cover letter, 3-4 paragraphs]
+
+===IMPROVEMENT NOTES===
+[Ranking estimate e.g. "Top 15%", key strengths, top 3-5 specific improvements]
+
+Mirror the exact language and keywords from the JD throughout. Be specific and confident.`;
+
+  try {
+    setProgress(15, 'connecting to claude api…');
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 4096,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }]
+      })
+    });
+
+    setProgress(70, 'generating resume…');
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error?.message || 'api error ' + resp.status);
+    }
+
+    const data = await resp.json();
+    const raw  = data.content[0].text;
+
+    const resumeMatch = raw.match(/===RESUME===([\s\S]*?)(?====COVER LETTER===|$)/);
+    const coverMatch  = raw.match(/===COVER LETTER===([\s\S]*?)(?====IMPROVEMENT NOTES===|$)/);
+    const notesMatch  = raw.match(/===IMPROVEMENT NOTES===([\s\S]*?)$/);
+
+    texts.resume = (resumeMatch?.[1] || '').trim();
+    texts.cover  = (coverMatch?.[1]  || '').trim();
+    texts.notes  = (notesMatch?.[1]  || '').trim();
+
+    document.getElementById('out-resume').textContent = texts.resume || raw;
+    document.getElementById('out-cover').textContent  = texts.cover  || '(no cover letter section found — check resume tab for full output)';
+    document.getElementById('out-notes').textContent  = texts.notes  || '(no notes section found)';
+
+    const rankMatch = texts.notes.match(/top\s+(\d+)\s*%/i);
+    if (rankMatch) {
+      const strip = document.getElementById('score-strip');
+      strip.style.display = 'flex';
+      document.getElementById('score-num').textContent  = 'Top ' + rankMatch[1] + '%';
+      document.getElementById('score-desc').textContent = 'estimated applicant ranking';
+    }
+
+    setProgress(100, 'done — review your results below');
+    document.getElementById('output-section').style.display = 'block';
+
+  } catch (e) {
+    setProgress(0, '⚠ ' + e.message);
+    document.getElementById('progress-label').style.color = 'var(--red)';
+  } finally {
+    btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>
